@@ -1,5 +1,5 @@
 import "./globals.css";
-import { Provider } from "@/components";
+import { Provider } from "@components";
 
 export const metadata = {
   title: "Next.js",
