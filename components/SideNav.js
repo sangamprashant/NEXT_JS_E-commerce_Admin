@@ -2,7 +2,7 @@
 import { Nav } from "@components";
 import { signIn, signOut, useSession } from "next-auth/react";
 
-const page = () => {
+const SideNav = ({childern}) => {
   const { data: session } = useSession();
   if (!session) {
     return (
@@ -24,6 +24,6 @@ const page = () => {
       <div className="bg-white flex flex-grow mt-2 mr-2 mb-2 rounded-lg p-4">{childern}</div>
     </div>
   );
-}
+};
 
-export default page
+export default SideNav;
