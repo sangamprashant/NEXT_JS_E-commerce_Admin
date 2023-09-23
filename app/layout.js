@@ -10,9 +10,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <Provider>
-          <SideNav>{children}</SideNav>
-        </Provider>
+        <Provider>{children}</Provider>
       </body>
     </html>
   );
