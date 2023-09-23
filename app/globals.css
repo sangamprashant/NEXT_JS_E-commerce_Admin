@@ -31,5 +31,15 @@ table.table-basic tr td {
     @apply border  p-1 border-blue-300;
 }
 table.table-basic a{
-    @apply bg-blue-900 text-white text-sm py-1 px-2 rounded-sm inline-flex gap-1 ;
+    @apply bg-blue-900 text-white text-sm py-1 px-2 rounded-sm inline-flex gap-1 mr-1;
+}
+.btn-red, .btn-default {
+    @apply px-4 py-1 rounded-md;
+}
+.btn-red{
+    @apply bg-red-900 text-white; 
+}
+
+.btn-default{
+    @apply bg-gray-500 text-white; 
 }

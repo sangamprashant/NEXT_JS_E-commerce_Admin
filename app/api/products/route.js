@@ -19,12 +19,11 @@ export const POST = async (req, res) => {
       price,
     });
     await product.save();
-console.log(product)
     // Respond with the saved product
     return new Response(JSON.stringify(product), { status: 200 });
   } catch (error) {
     console.error("Error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return new Response("Failed to fetch all products", { error:"Failed to fetch all products",status: 500 })
   }
 };
 export const GET = async (req, res) => {
@@ -35,15 +34,26 @@ export const GET = async (req, res) => {
       useUnifiedTopology: true,
       dbName: "next_ecommerce",
     });
-    let product;
-    if(req.query?.id){
-      product = await Product.findOne({_id:req.query?.id});
-    }else{
-      product = await Product.find({});
-    }
+    const  product = await Product.find({});
     return new Response(JSON.stringify(product), { status: 200 });
   } catch (error) {
     console.error("Error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return new Response("Failed to fetch the products", { error:"Failed to fetch the products",status: 500 })
+  }
+};
+export const PUT = async (req, res) => {
+  const { title, description, price, _id } = await req.json();
+  try {
+    // Connect to MongoDB using mongoose.connect
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      dbName: "next_ecommerce",
+    });
+    await Product.findOneAndUpdate({_id},{title, description, price,})
+    return new Response({ status: 200 });
+  } catch (error) {
+    console.error("Error:", error);
+    return new Response("Failed to fetch the products", { error:"Failed to fetch the products",status: 500 })
   }
 };

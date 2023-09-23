@@ -1,26 +1,29 @@
-"use client"
-import { SideNav } from "@components";
+"use client";
+import { ProductForm, SideNav } from "@components";
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Page({ params }) {
-  const id= params.productId;
+  const [product, setProduct] = useState(null)
+  const id = params.productId;
+  useEffect(() => {
+    fetchProduct(id);
+  }, [id]);
 
-useEffect(()=>{
-  console.log(id)
-  fetchProduct();
-},[id])
+  const fetchProduct = (id) => {
+    if (!id) {
+      return;
+    } else {
+      axios.get(`/api/products/${id}`).then((response) => {
+        setProduct(response.data);
+      });
+    }
+  };
 
-const fetchProduct = () => {
-  if(!id){
-    return;
-  }
-  axios.get('/api/products?id='+id).then(response=>{
-    console.log(response.data)
-  })
-
-}
- 
-  
-  return <SideNav>My Post: {params.productId}</SideNav>;
+  return (
+    <SideNav>
+    <h1>Edit Product</h1>
+     {product &&  <ProductForm {...product}/>}
+    </SideNav>
+  );
 }
