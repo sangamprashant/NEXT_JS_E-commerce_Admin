@@ -4,7 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 
 const page = () => {
   return (
-    <SideNav>fg</SideNav>
+    <SideNav>Admin Home</SideNav>
   );
 }
 

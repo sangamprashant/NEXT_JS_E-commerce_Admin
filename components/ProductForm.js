@@ -2,9 +2,18 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { ReactSortable } from "react-sortablejs";
+import { storage } from "@utils/firebase/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-const ProductForm = ({_id,title,description,price}) => {
-    const [productDetails, setProductDetails] = useState([]);
+const ProductForm = ({_id,title,description,price,images}) => {
+    const [productDetails, setProductDetails] = useState({
+        title: title || "", // Provide default values or empty strings as needed
+        description: description || "",
+        price: price || 0, // Provide a default value or appropriate initial value
+        images: images || [], // Provide an empty array as the initial value
+    });
+    const [isUploading, setIsuploading] = useState(false)
     const router = useRouter();
 
     useEffect(()=>{
@@ -12,7 +21,8 @@ const ProductForm = ({_id,title,description,price}) => {
             setProductDetails({
                 title:title,
                 description:description,
-                price:price
+                price:price,
+                images:images
             })
         }
     },[_id])
@@ -33,15 +43,68 @@ const ProductForm = ({_id,title,description,price}) => {
         router.push("/products")
     }
 
+    async function selectImages(e) {
+        const files = e.target?.files;
+        if (files && files.length > 0) {
+            setIsuploading(true)
+            for (let i = 0; i < files.length; i++) {
+                const fileRef = ref(storage, `ECommerceNEXT/${files[i].name + Date.now()}`);
+                try {
+                  const snapshot = await uploadBytes(fileRef, files[i]);
+                  const url = await getDownloadURL(snapshot.ref);
+                  console.log(url)
+                  setProductDetails((prevData) => ({
+                    ...prevData,
+                    images: [...(prevData?.images || []), url], // Provide a default empty array
+                  }));
+                } catch (error) {
+                  console.error("Error uploading image:", error);
+                }
+            }
+            setIsuploading(false)
+        }
+    }
+      
+    function reOrderedList(images){
+        setProductDetails({...productDetails,images:images})
+    }
+    
   return (
     <form onSubmit={handelSave}> 
         <label>Product Name</label>
         <input type="text" placeholder="product name" name="title" value={productDetails.title} onChange={handelInput} />
+        <label>Images</label>
+        <div className="mb-2 flex">
+            <ReactSortable list={productDetails?.images || []} setList={reOrderedList} className="flex felx-wrap">
+              {!!productDetails?.images && productDetails?.images.map((link) => (
+                <div className="mx-1" key={link}>
+                  <img className="inline-block h-24" src={link} alt="Product" />
+                </div>
+              ))}
+            </ReactSortable>
+                
+            {isUploading ? (
+              <label className="mx-2 w-24 h-24 text-center flex flex-col items-center justify-center text-sm gap-1 text-gray-500 rounded-lg bg-gray-200 cursor-progress">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+                <div>Loading...</div>
+              </label>
+            ) : (
+              <label className="mx-2 w-24 h-24 text-center flex flex-col items-center justify-center text-sm gap-1 text-gray-500 rounded-lg bg-gray-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <div>Upload</div>
+                <input type="file" multiple onChange={selectImages} className="hidden" />
+              </label>
+            )}
+        </div>
         <label>Product Description</label>
         <textarea placeholder="description" name="description" value={productDetails.description} onChange={handelInput}></textarea>
         <label>Product Price (in Rupees)</label>
         <input type="number" placeholder="product price" name="price" value={productDetails.price} onChange={handelInput}/>
-        <button className="btn-primary" type="submit">Save</button>
+        <button className="btn-primary" type="submit" disabled={isUploading}>{isUploading?"Please wait..":"Save"}</button>
     </form>
   );
 };
