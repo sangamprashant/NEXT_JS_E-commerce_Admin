@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 export const POST = async (req, res) => {
   try {
-    const { name, parentCategory } = await req.json();
+    const { name, parentCategory, properties } = await req.json();
     // Connect to MongoDB using mongoose.connect
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
@@ -14,7 +14,8 @@ export const POST = async (req, res) => {
     // Create and save the product
     const Category = new Categories({
         name,
-        parent:parentCategory
+        parent:parentCategory||undefined,
+        properties,
     });
     await Category.save();
     // Respond with the saved product
@@ -40,7 +41,7 @@ export const GET = async (req, res) => {
   }
 };
 export const PUT = async (req, res) => {
-  const { name, parentCategory, id } = await req.json();
+  const { name, parentCategory, id, properties } = await req.json();
   try {
     // Connect to MongoDB using mongoose.connect
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -49,7 +50,7 @@ export const PUT = async (req, res) => {
       dbName: "next_ecommerce",
     });
     // Define the update object based on the presence of parentCategory
-    const updateObject = parentCategory ? { name, parent: parentCategory } : { name, $unset: { parent: "" } };
+    const updateObject = parentCategory ? { name, parent: parentCategory,properties } : { name, $unset: { parent: "" },properties };
     await Categories.findOneAndUpdate({ _id: id }, updateObject);
     return new Response({ status: 200 });
   } catch (error) {

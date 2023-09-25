@@ -9,6 +9,7 @@ function Categories({ swal }) {
   const [parentCategory, setParentCategory] = useState("");
   const [catEdit, setCatEdit] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [properties,setProperties] = useState([])
 
   useEffect(() => {
     fetchData();
@@ -27,17 +28,23 @@ function Categories({ swal }) {
       return;
     }
     try {
+      const data = { 
+        name, 
+        parentCategory, 
+        properties:properties.map(p=>({
+          name:p.name, 
+          values:p.values.split(','),
+        }))
+      }
       if (catEdit) {
-        await axios.put("/api/categories", {
-          name,
-          parentCategory,
-          id: catEdit._id,
-        });
+        data.id = catEdit._id;
+        await axios.put("/api/categories", data);
       } else {
-        await axios.post("/api/categories", { name, parentCategory });
+        await axios.post("/api/categories", data);
       }
       setName("");
       setParentCategory("");
+      setProperties([])
       setCatEdit(null);
       fetchData();
     } catch (error) {
@@ -49,6 +56,9 @@ function Categories({ swal }) {
     setCatEdit(category);
     setName(category.name);
     setParentCategory(category?.parent?._id || "");
+    setProperties(category.properties.map(({name,values})=>({
+      name,values:values.join(',')
+    })))
   }
 
   function deleteCategory(category) {
@@ -72,22 +82,51 @@ function Categories({ swal }) {
       });
   }
 
+  function addProperty() {
+    setProperties(prev => {
+      return [...prev,{name:"",values:""}]
+    })
+  }
+
+function handelPropertyNameChange(index,property,newName) {
+  setProperties(prev => {
+    const properties= [...prev];
+    properties[index].name=newName;
+    return properties
+  })
+}
+function handelPropertyValuesChange(index,property,newValues) {
+  setProperties(prev => {
+    const properties= [...prev];
+    properties[index].values=newValues;
+    return properties
+  })
+}
+function removeProperty(indexToRemove){
+  setProperties(prev=>{
+    return [...prev].filter((p,pIndex)=>{
+      return pIndex !== indexToRemove;
+    })
+  })
+}
+
   return (
     <SideNav>
       <h1>Categories</h1>
       <label>
         {catEdit ? `Edit Category '${catEdit.name}'` : "Create New Category "}
       </label>
-      <form onSubmit={handelSave} className="flex gap-1  mb-4">
-        <input
+      <form onSubmit={handelSave} >
+      <div className="flex gap-1">
+      <input
           type="text"
-          className="mb-0"
+          className=""
           placeholder="Category name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <select
-          className="mb-0"
+          className=""
           value={parentCategory}
           onChange={(e) => setParentCategory(e.target.value)}
         >
@@ -99,11 +138,32 @@ function Categories({ swal }) {
               </option>
             ))}
         </select>
-        <button type="submit" className="btn-primary">
+      </div>
+      <div className="mb-2">
+        <label className="block">Properties</label>
+        <button type="button" className="btn-default text-sm mb-2" onClick={addProperty}>Add New Property</button>
+          {properties.length > 0 && properties.map((property,index)=>(
+            <div className="flex gap-1 mb-2">
+              <input className="mb-0" type="text" placeholder="property name (example:color)" value={property.name} onChange={(e)=>handelPropertyNameChange(index,property,e.target.value)}/>
+              <input className="mb-0" type="text" placeholder="values,comma,saparated"  value={property.values} onChange={(e)=>handelPropertyValuesChange(index,property,e.target.value)}/>
+              <button type="button" className="btn-default" onClick={()=>removeProperty(index)} >Remove</button>
+            </div>
+          ))}
+      </div>
+        <div className="flex gap-2">
+          {catEdit && (
+            <button type="button" className="btn-default py-2" onClick={()=>{setCatEdit(null);setName("");setParentCategory(""); setProperties([])   }}>
+          Cancel
+        </button>
+          )}
+          <button type="submit" className="btn-primary py-2">
           Save
         </button>
+        </div>
+        
       </form>
-      <table className="table-basic">
+      {!catEdit && (
+        <table className="table-basic">
         <thead>
           <tr>
             <td>Category name</td>
@@ -135,6 +195,8 @@ function Categories({ swal }) {
             ))}
         </tbody>
       </table>
+      )}
+  
     </SideNav>
   );
 }
