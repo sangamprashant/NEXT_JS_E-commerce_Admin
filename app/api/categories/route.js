@@ -1,10 +1,9 @@
-import { Product } from "@utils/models/Product";
+import { Categories } from "@utils/models/Categories";
 import mongoose from "mongoose";
 
 export const POST = async (req, res) => {
   try {
-    const { title, description, price,images,category } = await req.json();
-    
+    const { name, parentCategory } = await req.json();
     // Connect to MongoDB using mongoose.connect
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
@@ -13,19 +12,16 @@ export const POST = async (req, res) => {
     });
 
     // Create and save the product
-    const product = new Product({
-      title,
-      description,
-      price,
-      images,
-      category,
+    const Category = new Categories({
+        name,
+        parent:parentCategory
     });
-    await product.save();
+    await Category.save();
     // Respond with the saved product
-    return new Response(JSON.stringify(product), { status: 200 });
+    return new Response(JSON.stringify(Category), { status: 200 });
   } catch (error) {
     console.error("Error:", error);
-    return new Response("Failed to fetch all products", { error:"Failed to fetch all products",status: 500 })
+    return new Response("Failed to save the category", { error:"Failed to save the category",status: 500 })
   }
 };
 export const GET = async (req, res) => {
@@ -36,16 +32,15 @@ export const GET = async (req, res) => {
       useUnifiedTopology: true,
       dbName: "next_ecommerce",
     });
-    const  product = await Product.find({});
-    return new Response(JSON.stringify(product), { status: 200 });
+    const categories = await Categories.find({}).populate("parent");
+    return new Response(JSON.stringify(categories), { status: 200 });
   } catch (error) {
     console.error("Error:", error);
-    return new Response("Failed to fetch the products", { error:"Failed to fetch the products",status: 500 })
+    return new Response("Failed to fetch the Category", { error:"Failed to fetch the Category",status: 500 })
   }
 };
 export const PUT = async (req, res) => {
-  const {images, title, description, price, _id,category } = await req.json();
-  console.log(category)
+  const { name, parentCategory, id } = await req.json();
   try {
     // Connect to MongoDB using mongoose.connect
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -53,10 +48,12 @@ export const PUT = async (req, res) => {
       useUnifiedTopology: true,
       dbName: "next_ecommerce",
     });
-    await Product.findOneAndUpdate({_id},{title, description, price,images,category})
+    // Define the update object based on the presence of parentCategory
+    const updateObject = parentCategory ? { name, parent: parentCategory } : { name, $unset: { parent: "" } };
+    await Categories.findOneAndUpdate({ _id: id }, updateObject);
     return new Response({ status: 200 });
   } catch (error) {
     console.error("Error:", error);
-    return new Response("Failed to fetch the products", { error:"Failed to fetch the products",status: 500 })
+    return new Response("Failed to update the category", { error: "Failed to update the category", status: 500 });
   }
 };

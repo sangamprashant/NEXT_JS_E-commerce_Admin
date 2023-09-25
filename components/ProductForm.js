@@ -6,26 +6,27 @@ import { ReactSortable } from "react-sortablejs";
 import { storage } from "@utils/firebase/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-const ProductForm = ({_id,title,description,price,images}) => {
+const ProductForm = ({_id,title,description,price,images,category}) => {
     const [productDetails, setProductDetails] = useState({
         title: title || "", // Provide default values or empty strings as needed
         description: description || "",
         price: price || 0, // Provide a default value or appropriate initial value
         images: images || [], // Provide an empty array as the initial value
+        category:category || null,
     });
     const [isUploading, setIsuploading] = useState(false)
+    const [categories,setCategories]=useState([])
     const router = useRouter();
 
     useEffect(()=>{
-        if(_id){
-            setProductDetails({
-                title:title,
-                description:description,
-                price:price,
-                images:images
-            })
-        }
-    },[_id])
+        fetchCategories()
+    },[])
+
+    const fetchCategories = async () =>{
+      await axios.get("/api/categories").then((result) => {
+        setCategories(result.data);
+      });
+    }
 
     const handelInput =(e)=>{
         setProductDetails({...productDetails,[e.target.name]:e.target.value})
@@ -52,7 +53,6 @@ const ProductForm = ({_id,title,description,price,images}) => {
                 try {
                   const snapshot = await uploadBytes(fileRef, files[i]);
                   const url = await getDownloadURL(snapshot.ref);
-                  console.log(url)
                   setProductDetails((prevData) => ({
                     ...prevData,
                     images: [...(prevData?.images || []), url], // Provide a default empty array
@@ -73,6 +73,13 @@ const ProductForm = ({_id,title,description,price,images}) => {
     <form onSubmit={handelSave}> 
         <label>Product Name</label>
         <input type="text" placeholder="product name" name="title" value={productDetails.title} onChange={handelInput} />
+        <label>Product Name</label>
+        <select name="category" value={productDetails?.category || ""} onChange={handelInput}>
+          <option value="">Uncategorized</option>
+          {categories&&categories.map(catagory=>(
+            <option key={catagory._id} value={catagory._id}>{catagory.name}</option>
+          ))}
+        </select>
         <label>Images</label>
         <div className="mb-2 flex">
             <ReactSortable list={productDetails?.images || []} setList={reOrderedList} className="flex felx-wrap">
