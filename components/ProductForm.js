@@ -6,13 +6,14 @@ import { ReactSortable } from "react-sortablejs";
 import { storage } from "@utils/firebase/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-const ProductForm = ({_id,title,description,price,images,category}) => {
+const ProductForm = ({_id,title,description,price,images,category,properties}) => {
     const [productDetails, setProductDetails] = useState({
         title: title || "", // Provide default values or empty strings as needed
         description: description || "",
         price: price || 0, // Provide a default value or appropriate initial value
         images: images || [], // Provide an empty array as the initial value
         category:category || null,
+        properties:properties||{},
     });
     const [isUploading, setIsuploading] = useState(false)
     const [categories,setCategories]=useState([])
@@ -68,6 +69,27 @@ const ProductForm = ({_id,title,description,price,images,category}) => {
     function reOrderedList(images){
         setProductDetails({...productDetails,images:images})
     }
+
+    function handelProductProperties(propName, value) {
+      setProductDetails((prev) => ({
+        ...prev,
+        properties: {
+          ...prev.properties,
+          [propName]: value,
+        },
+      }));
+    }
+
+    const propertiesToFill =[];
+    if(categories.length>0 && productDetails.category){
+      let selCatInfo = categories.find(({_id})=>_id===productDetails.category)
+      propertiesToFill.push(...selCatInfo.properties)
+      while(selCatInfo?.parent?._id){
+        const parentCat = categories.find(({_id})=>_id===selCatInfo?.parent?._id)
+        propertiesToFill.push(...parentCat.properties)
+        selCatInfo=parentCat
+      }
+    }
     
   return (
     <form onSubmit={handelSave}> 
@@ -80,6 +102,16 @@ const ProductForm = ({_id,title,description,price,images,category}) => {
             <option key={catagory._id} value={catagory._id}>{catagory.name}</option>
           ))}
         </select>
+        {propertiesToFill.length>0 && propertiesToFill.map(p=>(
+          <div key={p._id} className="flex gap-2">
+            <div>{p.name}</div>
+            <select value={productDetails?.properties[p?.name]} onChange={(e)=>handelProductProperties(p?.name ,e.target.value )}>
+              {p.values.map(v=>(
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+        ))}
         <label>Images</label>
         <div className="mb-2 flex">
             <ReactSortable list={productDetails?.images || []} setList={reOrderedList} className="flex felx-wrap">

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 export const POST = async (req, res) => {
   try {
-    const { title, description, price,images,category } = await req.json();
+    const { title, description, price,images,category,properties } = await req.json();
     
     // Connect to MongoDB using mongoose.connect
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -19,6 +19,7 @@ export const POST = async (req, res) => {
       price,
       images,
       category,
+      properties,
     });
     await product.save();
     // Respond with the saved product
@@ -44,7 +45,7 @@ export const GET = async (req, res) => {
   }
 };
 export const PUT = async (req, res) => {
-  const {images, title, description, price, _id,category } = await req.json();
+  const {images, title, description, price, _id,category,properties } = await req.json();
   console.log(category)
   try {
     // Connect to MongoDB using mongoose.connect
@@ -53,7 +54,7 @@ export const PUT = async (req, res) => {
       useUnifiedTopology: true,
       dbName: "next_ecommerce",
     });
-    await Product.findOneAndUpdate({_id},{title, description, price,images,category})
+    await Product.findOneAndUpdate({_id},{title, description, price,images,category,properties})
     return new Response({ status: 200 });
   } catch (error) {
     console.error("Error:", error);
