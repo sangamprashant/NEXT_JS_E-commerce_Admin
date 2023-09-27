@@ -95,7 +95,7 @@ const ProductForm = ({_id,title,description,price,images,category,properties}) =
     <form onSubmit={handelSave}> 
         <label>Product Name</label>
         <input type="text" placeholder="product name" name="title" value={productDetails.title} onChange={handelInput} />
-        <label>Product Name</label>
+        <label>Product Category</label>
         <select name="category" value={productDetails?.category || ""} onChange={handelInput}>
           <option value="">Uncategorized</option>
           {categories&&categories.map(catagory=>(

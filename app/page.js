@@ -1,6 +1,5 @@
 "use client";
-import { Nav, SideNav } from "@components";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { SideNav } from "@components";
 
 const page = () => {
   return (
